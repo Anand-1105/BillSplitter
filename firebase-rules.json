@@ -1,0 +1,37 @@
+{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null",
+    "transactions": {
+      "$transactionId": {
+        // Only authenticated users can read/write their own transactions
+        ".read": "auth != null && data.child('participants').child(auth.uid).exists()",
+        ".write": "auth != null && (
+          // New transaction
+          !data.exists() ||
+          // Existing transaction - only if user is a participant
+          data.child('participants').child(auth.uid).exists()
+        )"
+      }
+    },
+    "users": {
+      "$userId": {
+        // Users can only read/write their own data
+        ".read": "auth != null && auth.uid === $userId",
+        ".write": "auth != null && auth.uid === $userId"
+      }
+    },
+    "groups": {
+      "$groupId": {
+        // Only group members can read/write group data
+        ".read": "auth != null && data.child('members').child(auth.uid).exists()",
+        ".write": "auth != null && (
+          // New group - any authenticated user can create
+          !data.exists() ||
+          // Existing group - only if user is a member
+          data.child('members').child(auth.uid).exists()
+        )"
+      }
+    }
+  }
+} 
